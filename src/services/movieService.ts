@@ -8,7 +8,10 @@ interface FetchMovieResponseProps {
   total_results: number;
 }
 
-export const fetchMovieServices = async (query: string, page: number) => {
+export const fetchMovieServices = async (
+  query: string,
+  page: number
+): Promise<FetchMovieResponseProps> => {
   const myKey = import.meta.env.VITE_API_KEY;
 
   const options = {

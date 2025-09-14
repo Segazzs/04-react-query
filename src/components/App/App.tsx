@@ -9,18 +9,24 @@ import Loader from "../Loader/Loader";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import ReactPaginate from "react-paginate";
 import css from "./App.module.css";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function App() {
   const [query, setQuery] = useState("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [page, setPage] = useState(2);
+  const [page, setPage] = useState(1);
 
   const handleSearch = (query: string) => {
+    setPage(1);
     setQuery(query);
+    if (data?.results.length === 0) {
+      toast.error("No movies found for your query");
+      return;
+    }
   };
 
-  const { data, isError, isLoading } = useQuery({
+  const { data, isError, isLoading, isSuccess } = useQuery({
     queryKey: ["movie", query, page],
     queryFn: () => fetchMovieServices(query, page),
     enabled: query !== "",
@@ -42,25 +48,31 @@ export default function App() {
   return (
     <>
       <SearchBar onSubmit={handleSearch} />
-
-      <ReactPaginate
-        pageCount={data?.total_pages ?? 0}
-        pageRangeDisplayed={5}
-        marginPagesDisplayed={1}
-        onPageChange={({ selected }) => setPage(selected + 1)}
-        forcePage={page - 1}
-        containerClassName={css.pagination}
-        activeClassName={css.active}
-        nextLabel="→"
-        previousLabel="←"
-      />
-
-      {isLoading && <Loader />}
+      {isSuccess && data.results.length > 0 && (
+        <>
+          <MovieGrid movies={data.results} onSelect={onSelect} />
+          <ReactPaginate
+            pageCount={data.total_pages}
+            pageRangeDisplayed={5}
+            marginPagesDisplayed={1}
+            onPageChange={({ selected }) => setPage(selected + 1)}
+            forcePage={page - 1}
+            containerClassName={css.pagination}
+            activeClassName={css.active}
+            nextLabel="→"
+            previousLabel="←"
+          />
+        </>
+      )}
+      ;{isLoading && <Loader />}
       {isError && <ErrorMessage />}
-      {data && <MovieGrid movies={data.results} onSelect={onSelect} />}
+      {data && data.results.length > 0 && (
+        <MovieGrid movies={data.results} onSelect={onSelect} />
+      )}
       {modalIsOpen && selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={onClose} />
       )}
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   );
 }
