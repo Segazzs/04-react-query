@@ -50,7 +50,6 @@ export default function App() {
       <SearchBar onSubmit={handleSearch} />
       {isSuccess && data.results.length > 0 && (
         <>
-          <MovieGrid movies={data.results} onSelect={onSelect} />
           <ReactPaginate
             pageCount={data.total_pages}
             pageRangeDisplayed={5}
