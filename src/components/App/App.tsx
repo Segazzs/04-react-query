@@ -1,6 +1,6 @@
 import SearchBar from "../SearchBar/SearchBar";
 import { fetchMovieServices } from "../../services/movieService";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Movie } from "../../types/movie";
 import MovieGrid from "../MovieGrid/MovieGrid";
 import MovieModal from "../MovieModal/MovieModal";
@@ -20,10 +20,6 @@ export default function App() {
   const handleSearch = (query: string) => {
     setPage(1);
     setQuery(query);
-    if (data?.results.length === 0) {
-      toast.error("No movies found for your query");
-      return;
-    }
   };
 
   const { data, isError, isLoading, isSuccess } = useQuery({
@@ -33,7 +29,12 @@ export default function App() {
     placeholderData: keepPreviousData,
   });
 
-  console.log(data);
+  useEffect(() => {
+    if (data?.results.length === 0) {
+      toast.error("No movies found for your query");
+      return;
+    }
+  }, [isSuccess, data]);
 
   const onSelect = (selectMovies: Movie) => {
     setSelectedMovie(selectMovies);
@@ -48,7 +49,7 @@ export default function App() {
   return (
     <>
       <SearchBar onSubmit={handleSearch} />
-      {isSuccess && data.results.length > 0 && (
+      {isSuccess && data.total_pages > 1 && (
         <>
           <ReactPaginate
             pageCount={data.total_pages}
@@ -63,7 +64,8 @@ export default function App() {
           />
         </>
       )}
-      ;{isLoading && <Loader />}
+
+      {isLoading && <Loader />}
       {isError && <ErrorMessage />}
       {data && data.results.length > 0 && (
         <MovieGrid movies={data.results} onSelect={onSelect} />
